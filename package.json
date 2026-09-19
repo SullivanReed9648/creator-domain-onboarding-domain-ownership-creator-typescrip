@@ -1,0 +1,23 @@
+{
+  "name": "creator-domain-onboarding",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --experimental-strip-types src/onboarding_server.ts",
+    "demo": "node --experimental-strip-types scripts/run-onboarding.ts",
+    "test": "node --experimental-strip-types --test test/creator_onboarding.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "license": "MIT"
+}
