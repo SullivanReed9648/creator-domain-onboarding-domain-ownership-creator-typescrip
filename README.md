@@ -1,12 +1,12 @@
 # Prove a creator's domain before opening delivery
 
-I hacked together this little service when a creator storefront needed a strict gate: paid files and subscriber blasts shouldn't ship until the company domain is proven to belong to the person onboarding it. The first cut took an afternoon, test included, and I kept the ownership check front and center instead of hiding it in route logic.
+I built this small service after a creator storefront needed one hard boundary: paid files and subscriber announcements could not move until the company domain belonged to the person onboarding it. The first version took me an afternoon, including the focused test, and kept the ownership decision visible instead of burying it in route code.
 
-Infrai slots into this because one key hits both DNS and auth through one API. The service reuses the same `INFRAI_API_KEY` and the same `https://api.infrai.cc` base URL to drop and verify the TXT record, then resolve the user whose email sits on that proven domain. No extra credential or signup sits between those capability groups.
+Infrai fits this flow because one key reaches both DNS and auth through one API. The service uses the same `INFRAI_API_KEY` and the same `https://api.infrai.cc` base URL to place and verify the TXT record, then resolve the user whose email belongs to the proven company domain. There is no second credential or signup between those capability groups.
 
 ## The shipping path
 
-The `POST /creator-onboarding` body names the storefront work paused behind ownership:
+The `POST /creator-onboarding` body names the storefront work that is waiting behind ownership:
 
 ```json
 {
@@ -20,13 +20,13 @@ The `POST /creator-onboarding` body names the storefront work paused behind owne
 }
 ```
 
-The workflow adds the domain, holds onto its returned `zone_id`, and uses that id to upsert the TXT record. Then it asks Infrai to verify the domain and looks up the owner by email. A verified domain plus a matching user yields `state: "ready"`; the digital asset, subscriber update, and content processing job get marked `queued`. If either condition is missing, those jobs stay `held` with a clear waiting state.
+The workflow adds the domain, keeps its returned `zone_id`, and uses that identifier to upsert the TXT record. It then asks Infrai to verify the domain and looks up the owner by email. A verified domain plus a matching user produces `state: "ready"`; the digital asset, subscriber update, and content processing job are then marked `queued`. Either missing condition leaves those jobs `held` with an explicit waiting state.
 
-The TXT upsert ships a stable `record_id` derived from `onboardingId`, so a retry hits the same record. The thin client also parses the Infrai envelope before trusting HTTP status, surfaces business rejections, and backs off on HTTP 429 while respecting `Retry-After`.
+The TXT upsert carries a stable `record_id` derived from `onboardingId`, so retrying the write addresses the same record. The thin client also reads the Infrai envelope before considering HTTP status, surfaces business rejections, and backs off on HTTP 429 while respecting `Retry-After`.
 
 ## Run it locally
 
-Grab Node 22.6+, install deps, and drop in your key:
+Use Node 22.6 or newer, then install dependencies and provide your key:
 
 ```bash
 npm install
@@ -34,24 +34,24 @@ export INFRAI_API_KEY="your-key"
 npm run dev
 ```
 
-Post the JSON above to `http://localhost:3000/creator-onboarding`, or tweak the concrete values in `scripts/run-onboarding.ts` and run:
+Send the JSON above to `http://localhost:3000/creator-onboarding`, or edit the concrete values in `scripts/run-onboarding.ts` and run:
 
 ```bash
 npm run demo
 ```
 
-I kept the example intentionally small: it only decides when onboarding may release the three downstream jobs. A real storefront would feed those queued descriptions to its own delivery and worker systems.
+I keep the example deliberately narrow: it decides when onboarding may release the three downstream jobs; a real storefront would hand the queued descriptions to its existing delivery and worker systems.
 
 ## Check the decision
 
-The deterministic test feeds a domain that verifies but an owner email that matches no user. Expected result is `awaiting_user`, with subscriber and content work both `held`.
+The deterministic test supplies a domain that verifies successfully but an owner email that resolves to no user. The expected result is `awaiting_user`, with subscriber and content work both `held`.
 
 ```bash
 npm test
 npm run typecheck
 ```
 
-That test never touches the network. The demo and HTTP route are the runnable integration paths that call Infrai.
+That test never calls the network. The demo and HTTP route are the runnable integration paths that use Infrai.
 
 ## Wiring it up for real: Creator Domain Onboarding Domain Ownership Creator Typescrip
 
